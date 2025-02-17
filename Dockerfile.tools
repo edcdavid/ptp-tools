@@ -1,0 +1,67 @@
+FROM registry.ci.openshift.org/ocp/4.19:base-rhel9
+RUN yum --showduplicates --disableexcludes=all list available kernel-devel
+RUN uname -m
+RUN uname -r
+RUN echo 'case "$1" in' >> /usr/local/bin/uname && \
+    echo '  -r) echo "5.14.0-427.50.1.el9_4.aarch64" ;;' >> /usr/local/bin/uname && \
+    echo '  -m) echo "aarch64" ;;' >> /usr/local/bin/uname && \
+    echo '  *) /bin/uname "$@" ;;' >> /usr/local/bin/uname && \
+    echo 'esac' >> /usr/local/bin/uname && \
+    chmod +x /usr/local/bin/uname
+RUN uname -m 
+RUN uname -r 
+RUN yum install -y iproute openssh mstflint pciutils tcpdump less vim dnf-plugins-core kernel-devel-5.14.0-427.50.1.el9_4.aarch64 kernel-modules-5.14.0-427.50.1.el9_4.aarch64 gcc rpm-build make
+RUN ls /lib/modules
+RUN printf "[doca]\n\
+name=DOCA Online Repo\n\
+baseurl=https://linux.mellanox.com/public/repo/doca/latest/rhel9.2/dpu-arm64\n\
+enabled=1\n\
+gpgcheck=0\n\
+priority=10\n\
+cost=10\n" > /etc/yum.repos.art/localdev/doca.repo
+RUN cat /etc/yum.repos.art/localdev/doca.repo
+RUN yum makecache
+RUN yum repolist
+
+
+RUN wget  https://content.mellanox.com/MFT/mft-4.31.0-149-arm64-rpm.tgz
+RUN tar xvf mft-4.31.0-149-arm64-rpm.tgz
+#RUN cd mft-4.31.0-149-arm64-rpm/RPMS && yum -y install mft-4.31.0-149.arm64.rpm 
+RUN ls /lib/modules
+RUN uname -r
+RUN cd mft-4.31.0-149-arm64-rpm && ./install.sh 
+RUN yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
+RUN mv /etc/yum.repos.d/epel.repo /etc/yum.repos.art/localdev/.
+RUN yum makecache
+
+RUN printf "[docaimage]\n\
+name=DOCA image Repo\n\
+baseurl=https://linux.mellanox.com/public/repo/doca/2.10.0/rhel9.4/arm64-sbsa/\n\
+enabled=1\n\
+gpgcheck=0" > /etc/yum.repos.art/localdev/doca.repo
+
+RUN printf "[doca]\n\
+name=DOCA Online Repo\n\
+baseurl=https://linux.mellanox.com/public/repo/doca/latest/rhel9.2/dpu-arm64\n\
+enabled=1\n\
+gpgcheck=0\n\
+priority=10\n\
+cost=10\n" > /etc/yum.repos.art/localdev/doca2.repo
+
+
+RUN dnf clean all
+RUN dnf -y install pv doca-all openssh-clients
+#RUN yum install -y doca-runtime
+RUN yum clean all && \
+rm -rf /var/cache/yum
+
+RUN systemctl disable openibd
+RUN systemctl disable rshim
+RUN systemctl disable NetworkManager
+RUN mv /lib/udev/rules.d/90-ib.rules /lib/udev/rules.d/90-ib.rules.disabled
+# Set environment variables for systemd
+ENV container=podman
+
+# Enable systemd as the entrypoint
+STOPSIGNAL SIGRTMIN+3
+CMD ["/usr/sbin/init"]
