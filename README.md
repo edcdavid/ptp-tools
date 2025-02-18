@@ -95,10 +95,13 @@ Output graph should be similar to:
 
 # Nvidia Bluefield 3 DPU
 
+## Overview
 The bluefield 3 card (bf3) is a data processing unit (DPU) connecting to the host system via a PCI bus similarly to a NIC. The DPU has a programmable openvswitch hardware, a CPU and 32G of RAM. It can offload switching in hardware instead of using software openvswitch in openshift. It can also run full workload, including AI on its GPU.
 The DPU can work in NIC or DPU mode, In NIC mode it is currently not supported to offload processing of PTP frames.
 The main documentation link is at https://docs.nvidia.com/networking/dpu-doca/index.html#doca 
+![BF3 overview](doc/bluefield3.svg)
 
+## Build a BF3 helper container image
 To help with debugging and configuring the DPU, the following container is provided [Dockerfile.tools](Dockerfile.tools).
 
 Build the quay.io/<user>/<repo>:tools image using 
@@ -109,7 +112,7 @@ then push it to your repo with:
 ```
 IMG_PREFIX=quay.io/<user>/<repo> make podman-push-tools   
 ```
-
+## Run the BF3 tools image on openshift host
 Then ssh to the node where the BF3 DPU is installed and run the following:
 *Note:* do not use --net=host as the service in the container will rename the host interfaces and kill the host network.
 ```
@@ -126,7 +129,7 @@ Start the rshim service with:
 systemctl start rshim
 ```
 
-After starting the service, the following innterfaces will appear:
+After starting the service, the following interfaces will appear:
 ```
 [root@3c62018acd7c /]# ip a
 ...
@@ -146,7 +149,7 @@ Assign an ip address to the interface:
 ```
   ip addr add dev tmfifo_net0 192.168.100.1/30
 ```
-
+## Connect to the DPU host
 The remote interface on this net is the BF3 card at the 192.168.100.2 address. ssh to the bf3 embedded server with:
 ```
 ssh ubuntu@192.168.100.2
@@ -171,6 +174,7 @@ ubuntu@localhost:~$ sudo ovs-ofctl dump-flows ovsbr1
  cookie=0x0, duration=27390.565s, table=0, n_packets=0, n_bytes=0, priority=0 actions=NORMAL
 ```
 
+## Configure Hardware timestamps for PTP in BF3 DPU
 In DPU mode, the documentation gives the example of configuring PTP to intercept L3 PTP IP frames in order to record a timestamp see (https://docs.nvidia.com/doca/sdk/doca+firefly+service+guide/index.html#src-3499060042_id-.DOCAFireflyServiceGuidev2.10.0-supportTXtimestamping).
 To work with linuxptp-daemon, we need a different configuration in order to intercept L2 PTP Ethernet frames based on the PTP Ethertype (0x88F7). 
 The openvswitch rules below assume that the default `ovsbr1` bridge is present.
