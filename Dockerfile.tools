@@ -59,6 +59,9 @@ RUN systemctl disable openibd
 RUN systemctl disable rshim
 RUN systemctl disable NetworkManager
 RUN mv /lib/udev/rules.d/90-ib.rules /lib/udev/rules.d/90-ib.rules.disabled
+COPY ptp-tools/99-default.link /usr/lib/systemd/network/99-default.link
+
+
 # Set environment variables for systemd
 ENV container=podman
 
