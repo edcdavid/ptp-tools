@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: tcpdump
+spec:
+  hostNetwork: true
+  containers:
+  - name: privileged-container
+    imagePullPolicy: Always
+    image: quay.io/deliedit/test:tcpdump   # You can use any image here
+    command: ["sleep", "3600"]   # Keeps the container running for testing purposes
+    securityContext:
+      privileged: true
+    volumeMounts:
+      - mountPath: /host
+        name: host-volume
+  volumes:
+    - name: host-volume
+      hostPath:
+        path: /  # Mounts the entire host file system
+        type: Directory
+
