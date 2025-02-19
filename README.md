@@ -1,3 +1,9 @@
+To use this tools repository, do a git clone in you ptp-operator existing repo.
+```
+cd ptp-operator
+git clone https://github.com/edcdavid/ptp-tools
+```
+
 # Building local images 
 To build all images (ptp-operator, linuxptp-daemon, kube-rbac-proxy, cloud-event-proxy) in a single personal repository. First create a repository in quay.io or another registry the same repository will be used to store all various debug images. The tag part of the image url indicates the image type.
 
