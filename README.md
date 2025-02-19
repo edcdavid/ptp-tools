@@ -1,10 +1,14 @@
 # Building local images 
-To build all images (ptp-operator, linuxptp-daemon, kube-rbac-proxy, cloud-event-proxy) to a single personal repository, run the command below.
+To build all images (ptp-operator, linuxptp-daemon, kube-rbac-proxy, cloud-event-proxy) in a single personal repository. First create a repository in quay.io or another registry the same repository will be used to store all various debug images. The tag part of the image url indicates the image type.
+
+
 The command uses a single quay.io repository ans stores the different images as tags:
 - `cep` tag: cloud-event-proxy
 - `ptpop` tag: ptp-operator
 - `lptpd` tag: linuxptp-daemon
 - `krp` tag: kube-rbac-proxy  
+
+
 ```
 IMG_PREFIX=quay.io/<user>/<repo> make podman-build-all
 ```
@@ -37,7 +41,7 @@ IMG_PREFIX=quay.io/<user>/<repo> make podman-push-tools
 
 To use the image created above, ssh to the node containing the Bluefield 3 card and run the following with podman:
 ```
-podman run --rm -d --privileged --name tools --net=host --pull=always quay.io/<user>/<repo>:tools
+podman run --rm -d --privileged --name tools --pull=always quay.io/<user>/<repo>:tools
 ```
 
 # To plot long term ptp4l offset graphs with gnuplot
@@ -96,9 +100,11 @@ Output graph should be similar to:
 # Nvidia Bluefield 3 DPU
 
 ## Overview
-The bluefield 3 card (bf3) is a data processing unit (DPU) connecting to the host system via a PCI bus similarly to a NIC. The DPU has a programmable openvswitch hardware, a CPU and 32G of RAM. It can offload switching in hardware instead of using software openvswitch in openshift. It can also run full workload, including AI on its GPU.
-The DPU can work in NIC or DPU mode, In NIC mode it is currently not supported to offload processing of PTP frames.
-The main documentation link is at https://docs.nvidia.com/networking/dpu-doca/index.html#doca 
+The bluefield 3 card (bf3) is a data processing unit (DPU) connecting to the host system via a PCI bus similarly to a NIC. The DPU has a programmable openvswitch hardware, a CPU and 32G of RAM. 
+It can be used to offload switching in hardware instead of using software openvswitch in openshift. It can also run full workloads.
+The DPU can work in NIC or DPU mode, In NIC mode it currently does not support offloading of PTP frames processing.
+The main documentation link is at https://docs.nvidia.com/networking/dpu-doca/index.html#doca
+
 ![BF3 overview](doc/bluefield3.svg)
 
 ## Build a BF3 helper container image
@@ -114,7 +120,8 @@ IMG_PREFIX=quay.io/<user>/<repo> make podman-push-tools
 ```
 ## Run the BF3 tools image on openshift host
 Then ssh to the node where the BF3 DPU is installed and run the following:
-*Note:* do not use --net=host as the service in the container will rename the host interfaces and kill the host network.
+
+**Note:** do not use --net=host as the service in the container will rename the host interfaces and kill the host network.
 ```
 podman run --rm -d --privileged --name tools  quay.io/<user>/<repo>:tools
 ```
@@ -176,6 +183,7 @@ ubuntu@localhost:~$ sudo ovs-ofctl dump-flows ovsbr1
 
 ## Configure Hardware timestamps for PTP in BF3 DPU
 In DPU mode, the documentation gives the example of configuring PTP to intercept L3 PTP IP frames in order to record a timestamp see (https://docs.nvidia.com/doca/sdk/doca+firefly+service+guide/index.html#src-3499060042_id-.DOCAFireflyServiceGuidev2.10.0-supportTXtimestamping).
+
 To work with linuxptp-daemon, we need a different configuration in order to intercept L2 PTP Ethernet frames based on the PTP Ethertype (0x88F7). 
 The openvswitch rules below assume that the default `ovsbr1` bridge is present.
 ```
