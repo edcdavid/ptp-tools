@@ -19,6 +19,10 @@ cat "$LOG_FILE"| grep "ptp4l\["|awk '{
             offset = $(i+1);
             print timestamp "," offset;
         }
+        if ($i == "ANNOUNCE_RECEIPT_TIMEOUT_EXPIRES") {
+            offset = 40.1111;
+            print timestamp "," offset;
+        }
     }
 }' > "$OUTPUT_FILE"
 
