@@ -1,4 +1,4 @@
-FROM registry.ci.openshift.org/ocp/builder:rhel-9-golang-1.22-openshift-4.19 AS builder
+FROM registry.ci.openshift.org/ocp/builder:rhel-9-golang-1.23-openshift-4.19 AS builder
 WORKDIR /go/src/github.com/brancz/kube-rbac-proxy
 RUN git clone https://github.com/openshift/kube-rbac-proxy.git /go/src/github.com/brancz/kube-rbac-proxy
 ENV GO111MODULE=on
