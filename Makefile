@@ -7,23 +7,27 @@ KUSTOMIZE ?= $(LOCALBIN)/kustomize
 
 IMG_PREFIX ?= quay.io/deliedit/test
 
-VALUES = lptpd ptpop cep krp
+VALUES = lptpd cep ptpop krp base
 
-podman-build-all:
+podman-buildall: $(foreach v, $(VALUES), podman-build-$(v))
+
+podman-build-%:
 	sed -i 's/IfNotPresent/Always/g' ../bindata/linuxptp/ptp-daemon.yaml
-	$(foreach v, $(VALUES), $(MAKE) clean-image VAR=$(v);)
-	$(foreach v, $(VALUES), $(MAKE) build-image VAR=$(v);)
+	$(MAKE) clean-image VAR=$*;
+	$(MAKE) build-image VAR=$*
 
-podman-push-all:
-	$(foreach v, $(VALUES), $(MAKE) push-image VAR=$(v);)
+podman-pushall: $(foreach v, $(VALUES), podman-push-$(v))
+
+podman-push-%:
+	podman manifest push ${IMG_PREFIX}:$*
 
 build-image:
 	podman manifest create ${IMG_PREFIX}:$(VAR)
-	podman build --platform linux/amd64,linux/arm64  -f Dockerfile.$(VAR)  --manifest ${IMG_PREFIX}:$(VAR)  ..
+	podman build --no-cache --platform linux/amd64,linux/arm64 -f Dockerfile.$(VAR)  --manifest ${IMG_PREFIX}:$(VAR)  ..
 
 build-image-arm:
 	podman manifest create ${IMG_PREFIX}:$(VAR)
-	podman build --platform linux/arm64  -f Dockerfile.$(VAR)  --manifest ${IMG_PREFIX}:$(VAR)  ..
+	podman build --no-cache --platform linux/arm64  -f Dockerfile.$(VAR)  --manifest ${IMG_PREFIX}:$(VAR)  ..
 
 podman-build-tools:
 	$(MAKE) clean-image VAR=tools
@@ -31,9 +35,6 @@ podman-build-tools:
 
 podman-push-tools:
 	$(MAKE) push-image VAR=tools
-
-push-image:
-	podman manifest push ${IMG_PREFIX}:$(VAR)
 
 clean-image:
 	podman manifest rm ${IMG_PREFIX}:$(VAR) || true

@@ -1,2 +1,2 @@
-FROM registry.ci.openshift.org/ocp/4.19:base-rhel9
+FROM registry.access.redhat.com/ubi9/ubi-minimal:latest
 RUN yum -y update && yum -y install tcpdump wireshark iproute pciutils less vim openssh && yum clean all

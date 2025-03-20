@@ -1,4 +1,4 @@
-FROM registry.ci.openshift.org/ocp/builder:rhel-9-golang-1.23-openshift-4.19 AS builder
+FROM docker.io/library/golang:latest AS builder
 ENV GO111MODULE=off
 ENV CGO_ENABLED=1
 ENV COMMON_GO_ARGS=-race
@@ -6,11 +6,11 @@ ENV GOOS=linux
 ENV GOPATH=/go
 
 WORKDIR /go/src/github.com/redhat-cne/cloud-event-proxy
-RUN git clone https://github.com/redhat-cne/cloud-event-proxy.git /go/src/github.com/redhat-cne/cloud-event-proxy
+RUN git clone -b add-missing-following https://github.com/edcdavid/cloud-event-proxy.git /go/src/github.com/redhat-cne/cloud-event-proxy
 
 RUN hack/build-go.sh
 
-FROM registry.ci.openshift.org/ocp/4.19:base-rhel9 AS bin
+FROM registry.access.redhat.com/ubi9/ubi-minimal:latest AS bin
 COPY --from=builder /go/src/github.com/redhat-cne/cloud-event-proxy/build/cloud-event-proxy /
 COPY --from=builder /go/src/github.com/redhat-cne/cloud-event-proxy/plugins/*.so /plugins/
 

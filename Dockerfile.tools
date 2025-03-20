@@ -1,4 +1,4 @@
-FROM registry.ci.openshift.org/ocp/4.19:base-rhel9
+FROM registry.access.redhat.com/ubi9/ubi-minimal:latest
 RUN yum --showduplicates --disableexcludes=all list available kernel-devel
 RUN uname -m
 RUN uname -r
