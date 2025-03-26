@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: tcpdump-daemon
+  labels:
+    app: tcpdump
+spec:
+  selector:
+    matchLabels:
+      app: tcpdump
+  template:
+    metadata:
+      labels:
+        app: tcpdump
+    spec:
+      hostNetwork: true
+      containers:
+        - name: privileged-container
+          imagePullPolicy: Always
+          image: quay.io/deliedit/test:tcpdump
+          command: ["sleep", "3600"]
+          securityContext:
+            privileged: true
+          volumeMounts:
+            - mountPath: /host
+              name: host-volume
+      volumes:
+        - name: host-volume
+          hostPath:
+            path: /
+            type: Directory
+      terminationGracePeriodSeconds: 10
