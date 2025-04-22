@@ -29,9 +29,17 @@ build-image-arm:
 	podman manifest create ${IMG_PREFIX}:$(VAR)
 	podman build --no-cache --platform linux/arm64  -f Dockerfile.$(VAR)  --manifest ${IMG_PREFIX}:$(VAR)  ..
 
+build-image-amd:
+	podman manifest create ${IMG_PREFIX}:$(VAR)
+	podman build --no-cache --platform linux/amd64  -f Dockerfile.$(VAR)  --manifest ${IMG_PREFIX}:$(VAR)  ..
+
 podman-build-tools:
 	$(MAKE) clean-image VAR=tools
 	$(MAKE) build-image-arm VAR=tools
+
+podman-build-tools-amd64:
+	$(MAKE) clean-image VAR=tools
+	$(MAKE) build-image-amd VAR=tools-amd64
 
 podman-push-tools:
 	$(MAKE) push-image VAR=tools

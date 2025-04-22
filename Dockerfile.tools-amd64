@@ -1,0 +1,57 @@
+FROM quay.io/centos/centos:stream9 
+USER root
+RUN dnf --showduplicates --disableexcludes=all list available kernel-devel
+RUN uname -m
+RUN uname -r
+RUN echo 'case "$1" in' >> /usr/local/bin/uname && \
+    echo '  -r) echo "5.14.0-570.el9.x86_64" ;;' >> /usr/local/bin/uname && \
+    echo '  -m) echo "x86_64" ;;' >> /usr/local/bin/uname && \
+    echo '  *) /bin/uname "$@" ;;' >> /usr/local/bin/uname && \
+    echo 'esac' >> /usr/local/bin/uname && \
+    chmod +x /usr/local/bin/uname
+RUN uname -m 
+RUN uname -r 
+RUN dnf config-manager --set-enabled crb
+RUN yum install -y iproute openssh mstflint pciutils tcpdump epel-release less vim kernel-devel-5.14.0-570.el9.x86_64 kernel-modules-5.14.0-570.el9.x86_64 gcc rpm-build make
+RUN ls /lib/modules
+RUN printf "[doca]\n\
+name=DOCA Online Repo\n\
+baseurl=https://linux.mellanox.com/public/repo/doca/2.10.0/rhel9.4/x86_64\n\
+enabled=1\n\
+gpgcheck=0\n\
+priority=10\n\
+cost=10\n" > /etc/yum.repos.d/doca.repo
+RUN cat /etc/yum.repos.d/doca.repo
+RUN yum makecache
+RUN yum repolist
+
+
+RUN curl -L -o mft-4.31.0-149-x86_64-rpm.tgz https://content.mellanox.com/MFT/mft-4.31.0-149-x86_64-rpm.tgz
+RUN tar xvf mft-4.31.0-149-x86_64-rpm.tgz
+RUN cd mft-4.31.0-149-x86_64-rpm/RPMS && yum -y install mft-4.31.0-149.x86_64.rpm 
+RUN ls /lib/modules
+RUN uname -r
+RUN cd mft-4.31.0-149-x86_64-rpm && ./install.sh
+#RUN yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
+#RUN mv /etc/yum.repos.d/epel.repo /etc/yum.repos.art/localdev/.
+RUN yum makecache
+
+RUN yum clean all
+RUN yum -y --skip-broken install  pv openssh-clients rshim mlnx-ethtool mlnx-tools mft 
+#RUN yum install -y doca-runtime
+RUN yum clean all && \
+rm -rf /var/cache/yum
+
+#RUN systemctl disable openibd
+#RUN systemctl disable rshim
+#RUN systemctl disable NetworkManager
+#RUN mv /lib/udev/rules.d/90-ib.rules /lib/udev/rules.d/90-ib.rules.disabled
+#COPY ptp-tools/99-default.link /usr/lib/systemd/network/99-default.link
+
+
+# Set environment variables for systemd
+ENV container=podman
+
+# Enable systemd as the entrypoint
+STOPSIGNAL SIGRTMIN+3
+CMD ["/usr/sbin/init"]

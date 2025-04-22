@@ -696,3 +696,14 @@ ethtool --set-priv-flags enP2s2f0np0 tx_port_ts on
 ```
 
 After this point, the enP2s2f0np0 should be ready for ptp configuration.
+
+# To make the dpu act completely as a nic
+
+Configure NIC mode(example directly on DPU): https://docs.nvidia.com/networking/display/bluefielddpubspv422/modes+of+operation#src-141856548_ModesofOperation-NICModeforBlueField-3
+```
+host/dpu> sudo mlxconfig -d /dev/mst/mt41692_pciconf0 s INTERNAL_CPU_OFFLOAD_ENGINE=1
+```
+Perform a Reset (example directly on DPU): https://docs.nvidia.com/doca/sdk/nvidia+bluefield+reset+and+reboot+procedures/index.html
+```
+dpu> shutdown -h now
+````
